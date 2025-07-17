@@ -298,27 +298,30 @@ data["tweet"] = data["tweet"].fillna("").map(preprocess)
 #data["tweet"] = data["tweet"].apply(pre2)
 x = data["tweet"]
 y = data["class"]
-v = TfidfVectorizer()
-x_vector = v.fit_transform(x)
+X_train, X_test, y_train, y_test = train_test_split(X, y, stratify=y, random_state=42)
 
-max_size = 19190
-if hasattr(x_vector, "toarray"):
-    x_vector = x_vector.toarray()
+# Vectorize
+vectorizer = TfidfVectorizer()
+X_train_vec = vectorizer.fit_transform(X_train)
 
-# Ensure y is a 1D NumPy array
-if hasattr(y, "values"):
-    y = y.values.ravel()
-elif isinstance(y, list):
-    y = np.array(y).ravel()
-sm = SMOTE(sampling_strategy={0:max_size,1:max_size,2:max_size}, random_state=42)
-x_smote,y_smote=sm.fit_resample(x_vector,y)
+# ✅ Convert to dense
+X_train_dense = X_train_vec.toarray()
 
-x_train,x_test,y_train,y_test = train_test_split(x_smote,y_smote,test_size=0.2,random_state=40)
-x_train_arr = x_train.toarray()
-x_test_arr = x_test.toarray()
+# ✅ Flatten y
+y_train_flat = np.array(y_train).ravel()
 
-m = MultinomialNB()
-m.fit(x_train_arr,y_train)
+# ✅ Apply SMOTE
+sm = SMOTE(random_state=42)
+X_smote, y_smote = sm.fit_resample(X_train_dense, y_train_flat)
+model = MultinomialNB()
+model.fit(X_smote, y_smote)
+
+# Transform test data with the same vectorizer
+X_test_vec = vectorizer.transform(X_test)
+X_test_dense = X_test_vec.toarray()
+
+# Predict
+y_pred = model.predict(X_test_dense)
 #y_pred = m.predict(x_test_arr)
 
 def fast_prediction(text):
@@ -326,9 +329,9 @@ def fast_prediction(text):
     text = re.sub(r"[\d]+", "", text)
     text = re.sub(r" +", " ", text)
     text = text.lower().strip()
-    doc = nlp(text)
-    text = " ".join([token.lemma_ for token in doc if not token.is_stop and not token.is_punct])
-    return m.predict(v.transform([text]))[0]
+    #doc = nlp(text)
+    #text = " ".join([token.lemma_ for token in doc if not token.is_stop and not token.is_punct])
+    return model.predict(v.transform([text]))[0]
 
 
 col1,col2 = st.columns([0.8,1])
