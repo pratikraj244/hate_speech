@@ -302,6 +302,14 @@ v = TfidfVectorizer()
 x_vector = v.fit_transform(x)
 
 max_size = 19190
+if hasattr(x_vector, "toarray"):
+    x_vector = x_vector.toarray()
+
+# Ensure y is a 1D NumPy array
+if hasattr(y, "values"):
+    y = y.values.ravel()
+elif isinstance(y, list):
+    y = np.array(y).ravel()
 sm = SMOTE(sampling_strategy={0:max_size,1:max_size,2:max_size}, random_state=42)
 x_smote,y_smote=sm.fit_resample(x_vector,y)
 
