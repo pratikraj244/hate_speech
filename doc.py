@@ -306,11 +306,11 @@ sm = SMOTE(sampling_strategy={0:max_size,1:max_size,2:max_size}, random_state=42
 x_smote,y_smote=sm.fit_resample(x_vector,y)
 
 x_train,x_test,y_train,y_test = train_test_split(x_smote,y_smote,test_size=0.2,random_state=40)
-#x_train_arr = x_train.toarray()
-#x_test_arr = x_test.toarray()
+x_train_arr = x_train.toarray()
+x_test_arr = x_test.toarray()
 
 m = MultinomialNB()
-m.fit(x_train,y_train)
+m.fit(x_train_arr,y_train)
 #y_pred = m.predict(x_test_arr)
 
 def fast_prediction(text):
