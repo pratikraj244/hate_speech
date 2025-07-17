@@ -14,6 +14,8 @@ from imblearn.over_sampling import SMOTE
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.naive_bayes import MultinomialNB
 from sklearn.metrics import classification_report,confusion_matrix,accuracy_score
+import subprocess
+
 st.set_page_config(page_title="CleanChat", layout="wide")
 def pil_to_base64(img):
     buffer = BytesIO()
@@ -276,7 +278,11 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 data = pd.read_csv(r"labeled_data.csv")
-nlp = spacy.load("en_core_web_sm")
+try:
+    nlp = spacy.load("en_core_web_sm")
+except OSError:
+    subprocess.run(["python", "-m", "spacy", "download", "en_core_web_sm"])
+    nlp = spacy.load("en_core_web_sm")
 
 
 def preprocess(text):
