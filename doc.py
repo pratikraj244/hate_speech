@@ -14,8 +14,6 @@ from imblearn.over_sampling import SMOTE
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.naive_bayes import MultinomialNB
 from sklearn.metrics import classification_report,confusion_matrix,accuracy_score
-import subprocess
-
 st.set_page_config(page_title="CleanChat", layout="wide")
 def pil_to_base64(img):
     buffer = BytesIO()
@@ -32,7 +30,7 @@ img_base64 = pil_to_base64(img)
 st.markdown("""
     <style>
         .top-left-logo {
-            top: 20px;
+            top: 50px;
             left: 75px;
             font-size: 38px;
             font-weight: 900;
@@ -278,15 +276,11 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 data = pd.read_csv(r"labeled_data.csv")
-#try:
-    #nlp = spacy.load("en_core_web_sm")
-#except OSError:
-    #subprocess.run(["python", "-m", "spacy", "download", "en_core_web_sm"])
-    #nlp = spacy.load("en_core_web_sm")
+nlp = spacy.load("en_core_web_sm")
 
 
 def preprocess(text):
-  #doc = nlp(text)
+  doc = nlp(text)
   text = re.sub(r"[^\w\s\d\']","",text)
   text = re.sub(r"[\d]+","",text)
   text = re.sub(r" +"," ",text)
@@ -298,30 +292,19 @@ data["tweet"] = data["tweet"].fillna("").map(preprocess)
 #data["tweet"] = data["tweet"].apply(pre2)
 x = data["tweet"]
 y = data["class"]
-X_train, X_test, y_train, y_test = train_test_split(X, y, stratify=y, random_state=42)
+v = TfidfVectorizer()
+x_vector = v.fit_transform(x)
 
-# Vectorize
-vectorizer = TfidfVectorizer()
-X_train_vec = vectorizer.fit_transform(X_train)
+max_size = 19190
+sm = SMOTE(sampling_strategy={0:max_size,1:max_size,2:max_size}, random_state=42)
+x_smote,y_smote=sm.fit_resample(x_vector,y)
 
-# ✅ Convert to dense
-X_train_dense = X_train_vec.toarray()
+x_train,x_test,y_train,y_test = train_test_split(x_smote,y_smote,test_size=0.2,random_state=40)
+#x_train_arr = x_train.toarray()
+#x_test_arr = x_test.toarray()
 
-# ✅ Flatten y
-y_train_flat = np.array(y_train).ravel()
-
-# ✅ Apply SMOTE
-sm = SMOTE(random_state=42)
-X_smote, y_smote = sm.fit_resample(X_train_dense, y_train_flat)
-model = MultinomialNB()
-model.fit(X_smote, y_smote)
-
-# Transform test data with the same vectorizer
-X_test_vec = vectorizer.transform(X_test)
-X_test_dense = X_test_vec.toarray()
-
-# Predict
-y_pred = model.predict(X_test_dense)
+m = MultinomialNB()
+m.fit(x_train,y_train)
 #y_pred = m.predict(x_test_arr)
 
 def fast_prediction(text):
@@ -329,9 +312,9 @@ def fast_prediction(text):
     text = re.sub(r"[\d]+", "", text)
     text = re.sub(r" +", " ", text)
     text = text.lower().strip()
-    #doc = nlp(text)
-    #text = " ".join([token.lemma_ for token in doc if not token.is_stop and not token.is_punct])
-    return model.predict(v.transform([text]))[0]
+    doc = nlp(text)
+    text = " ".join([token.lemma_ for token in doc if not token.is_stop and not token.is_punct])
+    return m.predict(v.transform([text]))[0]
 
 
 col1,col2 = st.columns([0.8,1])
