@@ -1,9 +1,9 @@
-streamlit==1.32.2
-streamlit-option-menu==0.3.6
+streamlit
+streamlit-option-menu
 pandas
 numpy
 Pillow
 spacy
-scikit-learn==1.2.2
+scikit-learn
 imbalanced-learn
 
