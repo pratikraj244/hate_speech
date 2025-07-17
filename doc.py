@@ -278,15 +278,15 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 data = pd.read_csv(r"labeled_data.csv")
-try:
-    nlp = spacy.load("en_core_web_sm")
-except OSError:
-    subprocess.run(["python", "-m", "spacy", "download", "en_core_web_sm"])
-    nlp = spacy.load("en_core_web_sm")
+#try:
+    #nlp = spacy.load("en_core_web_sm")
+#except OSError:
+    #subprocess.run(["python", "-m", "spacy", "download", "en_core_web_sm"])
+    #nlp = spacy.load("en_core_web_sm")
 
 
 def preprocess(text):
-  doc = nlp(text)
+  #doc = nlp(text)
   text = re.sub(r"[^\w\s\d\']","",text)
   text = re.sub(r"[\d]+","",text)
   text = re.sub(r" +"," ",text)
